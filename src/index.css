@@ -1,0 +1,186 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ROOT */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* SKY WAVE MOTION BACKGROUND */
+body {
+  font-family: "Poppins", sans-serif;
+  color: #0d3b66;
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* FIXED SKY WAVE MOTION — NO OVERFLOW */
+.wave {
+  position: fixed;                /* FIX: stops vertical overflow */
+  bottom: -40px;                  /* always stays at bottom */
+  left: 0;
+  width: 200%;
+  height: 180px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 50%;
+  animation: waveMove 25s linear infinite;
+  z-index: 0;
+  pointer-events: none;           /* don't block clicks */
+}
+
+.wave:nth-child(2) {
+  background: rgba(255, 255, 255, 0.07);
+  animation-duration: 35s;
+}
+
+.wave:nth-child(3) {
+  background: rgba(255, 255, 255, 0.05);
+  animation-duration: 45s;
+}
+
+/* Prevent horizontal scrollbar */
+html, body {
+  overflow-x: hidden !important;
+}
+
+
+/* WAVE ANIMATION */
+@keyframes waveMove {
+  0% { transform: translateX(0) translateY(0) rotate(0deg); }
+  50% { transform: translateX(25%) translateY(-10px) rotate(180deg); }
+  100% { transform: translateX(0) translateY(0) rotate(360deg); }
+}
+
+/* CARD DESIGN */
+.card {
+  position: relative;
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* PAGE CONTAINER */
+.container {
+  margin-top: 30px;
+  margin-bottom: 50px;
+  position: relative;
+  z-index: 1;
+}
+
+/* NAVBAR */
+.navbar {
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #0d3b66 !important;
+}
+
+.nav-link {
+  font-weight: 500;
+  color: #0d3b66 !important;
+}
+
+.nav-link:hover {
+  color: #064663 !important;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+
+/* BUTTONS */
+.btn-primary,
+.btn-success,
+.btn-warning,
+.btn-danger {
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary {
+  background: #0072ff;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: #005bb5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+/* HOTEL IMAGES INSIDE CARDS */
+.card-img-top {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* PAGE TITLES */
+h1, h2, h3, h4, h5 {
+  color: #0b426f;
+  font-weight: 700;
+}
+
+/* BOOKING SUMMARY BOX */
+.summary-box {
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(14px);
+}
+
+/* GLASS EFFECT FOR FORMS */
+.form-control,
+.form-select {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 12px;
+  transition: box-shadow 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 8px rgba(0, 114, 255, 0.5);
+  outline: none;
+}
+
+/* FOOTER */
+footer {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  text-align: center;
+  font-weight: 500;
+  color: #064663;
+  position: relative;
+  z-index: 1;
+}
+
+/* UTILITY */
+.text-center {
+  text-align: center;
+}
