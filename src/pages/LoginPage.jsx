@@ -14,33 +14,24 @@ function LoginPage() {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      const res = await login(formData);
+  try {
+    const res = await login(formData);
 
-      if (!res.ok) {
-        setError(res.message || "Login failed");
-        return;
-      }
-
-      // ROLE-BASED REDIRECT
-      setTimeout(() => {
-        if (res.user.role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
-      }, 600);
-
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-        "Something went wrong. Please try again."
-      );
+    if (res.ok) {
+      navigate(res.user.role === "admin" ? "/admin" : "/");
+    } else {
+      setError(res.message);
     }
+  } catch (err) {
+    setError(
+      err?.response?.data?.message ||
+      "Login failed. Check email or password."
+    );
   }
+}
 
 
   return (
