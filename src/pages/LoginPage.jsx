@@ -1,39 +1,47 @@
+// src/pages/LoginPage.jsx
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
   const [error, setError] = useState("");
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
-    function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    const result = login(formData);
-    if (!result.ok) {
-      setError(result.message || "Login failed");
-      return;
-    }
-    // success
-    const from = location.state?.from;
-    const hotel = location.state?.hotel;
-    if (from === "/booking" && hotel) {
-      navigate("/booking", { state: { hotel } });
-    } else {
-      navigate("/dashboard");
+
+    try {
+      const res = await login(formData);
+
+      if (!res.ok) {
+        setError(res.message || "Login failed");
+        return;
+      }
+
+      // ROLE-BASED REDIRECT
+      setTimeout(() => {
+        if (res.user.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      }, 600);
+
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+        "Something went wrong. Please try again."
+      );
     }
   }
+
 
   return (
     <div className="col-md-6 mx-auto">
@@ -43,7 +51,7 @@ function LoginPage() {
         {error && <div className="alert alert-danger">{error}</div>}
 
         <div className="mb-3">
-          <label className="form-label">Email Address</label>
+          <label className="form-label">Email</label>
           <input
             type="email"
             name="email"
@@ -51,7 +59,6 @@ function LoginPage() {
             required
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter your email"
           />
         </div>
 
@@ -64,7 +71,6 @@ function LoginPage() {
             required
             value={formData.password}
             onChange={handleChange}
-            placeholder="Enter your password"
           />
         </div>
 
@@ -74,9 +80,7 @@ function LoginPage() {
 
         <p className="text-center mt-3">
           Don't have an account?{" "}
-          <a href="/register" className="fw-bold">
-            Register here
-          </a>
+          <a href="/register" className="fw-bold">Register</a>
         </p>
       </form>
     </div>

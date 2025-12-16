@@ -1,109 +1,186 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+// src/pages/HotelDetailsPage.jsx
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { fetchHotelById } from "../api";
+import { fetchHotelReviewsAPI, addReviewAPI } from "../api";
+import { useAuth } from "../context/AuthContext";
 
-function HotelDetailsPage() {
+export default function HotelDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-  // Temporary hotel list (API will replace this later)
-  const hotels = [
-    {
-      id: 1,
-      name: "Grand Palace Hotel",
-      location: "Chennai",
-      price: 3500,
-      image:
-        "https://p4.wallpaperbetter.com/wallpaper/4/496/990/palace-4k-high-resolution-wallpaper-preview.jpg",
-      description:
-        "Experience luxury and comfort at Grand Palace Hotel. Perfect for business travelers and families, offering world-class amenities and exceptional hospitality.",
-      amenities: ["Free Wi-Fi", "Swimming Pool", "Room Service", "Parking"],
-    },
-    {
-      id: 2,
-      name: "Ocean View Resort",
-      location: "Goa",
-      price: 5500,
-      image:
-        "https://wallpaperbat.com/img/615705-hd-desktop-wallpaper-of-maldives-desktop-wallpaper-of-ocean-resort.jpg",
-      description:
-        "Wake up to breathtaking ocean views and unwind with beach activities. Ideal for vacation lovers and honeymoon couples.",
-      amenities: ["Beach Access", "Spa", "Restaurant", "Free Breakfast"],
-    },
-    {
-      id: 3,
-      name: "City Comfort Inn",
-      location: "Bangalore",
-      price: 2500,
-      image:
-        "https://i.pinimg.com/736x/e6/30/db/e630db9e931df9ea09a6090cf5dbfa89.jpg",
-      description:
-        "A budget-friendly stay offering clean rooms, fast Wi-Fi, and easy access to IT hubs and malls.",
-      amenities: ["Free Wi-Fi", "Parking", "24/7 Security", "AC Rooms"],
-    },
-  ];
+  const [hotel, setHotel] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Find selected hotel
-  const hotel = hotels.find((h) => h.id === Number(id));
+  // ⭐ Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [reviewError, setReviewError] = useState("");
 
-  if (!hotel) return <h2 className="text-danger">Hotel Not Found</h2>;
+  // ---------------- LOAD HOTEL ----------------
+  useEffect(() => {
+    async function loadHotel() {
+      try {
+        const data = await fetchHotelById(id);
+        setHotel(data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadHotel();
+  }, [id]);
 
-  // When clicking Book Now
-  function goToBooking() {
-    navigate("/booking", { state: { hotel } });
-  }
+  // ---------------- LOAD REVIEWS ----------------
+  useEffect(() => {
+    async function loadReviews() {
+      const res = await fetchHotelReviewsAPI(id);
+      if (res.ok) {
+        setReviews(res.reviews);
+        setAvgRating(res.avgRating);
+      }
+    }
+    loadReviews();
+  }, [id]);
+
+  if (loading) return <p>Loading hotel…</p>;
+  if (!hotel) return <h2>Hotel not found</h2>;
 
   return (
     <div className="container mb-5">
 
       {/* HERO IMAGE */}
       <div
-        className="position-relative mb-4 shadow"
-        style={{
-          height: "350px",
-          backgroundImage: `url(${hotel.image})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          borderRadius: "10px",
-        }}
+        className="hotel-hero"
+        style={{ backgroundImage: `url(${hotel.image})` }}
       >
-        <div
-          className="position-absolute top-0 start-0 w-100 h-100"
-          style={{
-            background: "rgba(0,0,0,0.4)",
-            borderRadius: "10px",
-          }}
-        ></div>
-
-        <div className="position-absolute bottom-0 text-white p-4">
-          <h1 className="fw-bold">{hotel.name}</h1>
-          <h5>{hotel.location}</h5>
+        <div className="hotel-hero-text">
+          <h1>{hotel.name}</h1>
+          <p>{hotel.location}</p>
         </div>
       </div>
 
       {/* DESCRIPTION */}
-      <div className="mb-4">
-        <h3 className="fw-bold">About This Hotel</h3>
-        <p className="text-muted">{hotel.description}</p>
+      <div className="mt-4">
+        <h3>About This Hotel</h3>
+        <p>{hotel.description}</p>
+      </div>
+
+      {/* ⭐ RATING SUMMARY */}
+      <div className="mt-4">
+        <h4>
+          ⭐ {avgRating} / 5{" "}
+          <span className="text-muted">({reviews.length} reviews)</span>
+        </h4>
       </div>
 
       {/* AMENITIES */}
-      <div className="mb-4">
-        <h4 className="fw-bold">Amenities</h4>
-        <ul className="list-group list-group-flush mt-2">
-          {hotel.amenities.map((item, index) => (
-            <li key={index} className="list-group-item">
-              ✅ {item}
-            </li>
-          ))}
-        </ul>
+      {hotel.amenities?.length > 0 && (
+        <div className="mt-4">
+          <h4>Amenities</h4>
+          <ul className="amenities-list">
+            {hotel.amenities.map((a, i) => (
+              <li key={i}>✅ {a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 📝 REVIEWS LIST */}
+      <div className="mt-4">
+        <h4>Guest Reviews</h4>
+
+        {reviews.length === 0 && (
+          <p className="text-muted">No reviews yet.</p>
+        )}
+
+        {reviews.map((r) => (
+          <div key={r._id} className="card p-3 mb-3">
+            <div className="d-flex justify-content-between">
+              <strong>{r.userId?.name || "Guest"}</strong>
+              <span>⭐ {r.rating}</span>
+            </div>
+            {r.comment && <p className="mt-2 mb-0">{r.comment}</p>}
+          </div>
+        ))}
       </div>
 
-      {/* PRICE + BOOK NOW */}
-      <div className="border rounded p-4 shadow">
-        <h3 className="fw-bold text-success">₹ {hotel.price} / night</h3>
+      {/* ✍️ ADD REVIEW */}
+      {isAuthenticated && (
+        <div className="card p-4 mt-4">
+          <h5 className="fw-bold mb-3">Write a Review</h5>
 
+          {reviewError && (
+            <div className="alert alert-danger">{reviewError}</div>
+          )}
+
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setReviewError("");
+
+              try {
+                const res = await addReviewAPI({
+                  hotelId: hotel.id || hotel._id,
+                  rating,
+                  comment,
+                });
+
+                if (!res.ok) {
+                  setReviewError(res.message);
+                  return;
+                }
+
+                // Refresh reviews after submit
+                const refreshed = await fetchHotelReviewsAPI(id);
+                setReviews(refreshed.reviews);
+                setAvgRating(refreshed.avgRating);
+
+                setRating(5);
+                setComment("");
+              } catch (err) {
+                setReviewError("Failed to submit review");
+              }
+            }}
+          >
+            <div className="mb-3">
+              <label className="form-label">Rating</label>
+              <select
+                className="form-select"
+                value={rating}
+                onChange={(e) => setRating(Number(e.target.value))}
+              >
+                {[5, 4, 3, 2, 1].map((n) => (
+                  <option key={n} value={n}>
+                    {n} Star{n > 1 && "s"}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Comment (optional)</label>
+              <textarea
+                className="form-control"
+                rows="3"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+            </div>
+
+            <button className="btn btn-primary">Submit Review</button>
+          </form>
+        </div>
+      )}
+
+      {/* PRICE + BOOK */}
+      <div className="price-box mt-5">
+        <h3>₹ {hotel.price} / night</h3>
         <button
-          onClick={goToBooking}
-          className="btn btn-success w-100 mt-3 py-2 fw-bold fs-5"
+          className="btn btn-success btn-lg w-100 mt-3"
+          onClick={() => navigate("/booking", { state: { hotel } })}
         >
           Book Now
         </button>
@@ -111,5 +188,3 @@ function HotelDetailsPage() {
     </div>
   );
 }
-
-export default HotelDetailsPage;

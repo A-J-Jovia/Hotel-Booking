@@ -1,100 +1,108 @@
-// src/context/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-const STORAGE_USER = "hb_user";
-const STORAGE_USERS = "hb_registered_users";
-const STORAGE_BOOKINGS = "hb_bookings";
+import {
+  setAuthToken,
+  loginAPI,
+  registerAPI,
+  createBookingAPI,
+  fetchUserBookingsAPI,
+  cancelBookingAPI,
+} from "../api";
 
+// ================= CONTEXT =================
 const AuthContext = createContext();
+export const useAuth = () => useContext(AuthContext);
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
+// ================= PROVIDER =================
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem("hb_user"))
+  );
+  const [token, setToken] = useState(localStorage.getItem("hb_token"));
 
-  // Load logged-in user
+  // Attach token to axios on change
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_USER);
-    if (raw) setUser(JSON.parse(raw));
-  }, []);
+    setAuthToken(token);
+  }, [token]);
 
-  // Save logged-in user
-  useEffect(() => {
-    if (user) localStorage.setItem(STORAGE_USER, JSON.stringify(user));
-    else localStorage.removeItem(STORAGE_USER);
-  }, [user]);
+  // ---------------- LOGIN ----------------
+  async function login(data) {
+    const res = await loginAPI(data);
 
-  // LOGIN
-  function login({ email, password }) {
-    const users = JSON.parse(localStorage.getItem(STORAGE_USERS) || "[]");
-
-    const found = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-
-    if (!found) {
-      return { ok: false, message: "Invalid email or password" };
+    if (res.ok) {
+      localStorage.setItem("hb_user", JSON.stringify(res.user));
+      localStorage.setItem("hb_token", res.token);
+      setUser(res.user);
+      setToken(res.token);
     }
 
-    const userData = {
-      name: found.name,
-      email: found.email,
-    };
-
-    setUser(userData);
-    return { ok: true, user: userData };
+    return res;
   }
 
-  // REGISTER
-  function register({ name, email, password }) {
-    const users = JSON.parse(localStorage.getItem(STORAGE_USERS) || "[]");
-
-    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      return { ok: false, message: "Email already registered" };
-    }
-
-    const newUser = { name, email, password };
-    users.push(newUser);
-    localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
-
-    const userData = { name, email };
-    setUser(userData);
-
-    return { ok: true, user: userData };
+  // ---------------- REGISTER ----------------
+  async function register(data) {
+    return await registerAPI(data);
   }
 
+  // ---------------- LOGOUT ----------------
   function logout() {
+    localStorage.removeItem("hb_user");
+    localStorage.removeItem("hb_token");
     setUser(null);
+    setToken(null);
   }
 
-  // ADD BOOKING
-  function addBooking(booking) {
-    const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS) || "[]");
-    const newBooking = { id: Date.now(), ...booking };
-    bookings.push(newBooking);
-    localStorage.setItem(STORAGE_BOOKINGS, JSON.stringify(bookings));
-    return newBooking;
+  // ---------------- ADD BOOKING ----------------
+  async function addBooking(payload) {
+    try {
+      const res = await createBookingAPI(payload);
+      return { ok: true, booking: res.booking };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err?.response?.data?.message || "Booking failed",
+      };
+    }
   }
 
-  // GET USER BOOKINGS
-  function getBookings() {
-    if (!user) return [];
-    const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS) || "[]");
-    return bookings.filter((b) => b.userEmail === user.email);
+  // ---------------- GET BOOKINGS ----------------
+  async function getBookings() {
+    try {
+      const res = await fetchUserBookingsAPI();
+      return res.bookings || [];
+    } catch (err) {
+      return [];
+    }
   }
 
+  // ---------------- CANCEL BOOKING ----------------
+  async function cancelBooking(id) {
+    try {
+      const res = await cancelBookingAPI(id);
+      return res;
+    } catch (err) {
+      return {
+        ok: false,
+        message:
+          err?.response?.data?.message || "Cancellation failed",
+      };
+    }
+  }
+
+  // ================= CONTEXT VALUE =================
   return (
     <AuthContext.Provider
       value={{
         user,
+        token,
         login,
         register,
         logout,
-        isAuthenticated: !!user,
         addBooking,
         getBookings,
+        cancelBooking,
+        isAuthenticated: !!user,
+        isAdmin: user?.role === "admin",
       }}
     >
       {children}

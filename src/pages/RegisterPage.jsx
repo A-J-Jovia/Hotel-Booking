@@ -2,116 +2,40 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-function RegisterPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+export default function RegisterPage() {
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  function handleChange(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  }
-
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match!");
-      return;
-    }
-
-    const res = register({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-    });
-
+    const res = await register(form);
     if (!res.ok) {
-      setError(res.message || "Registration failed");
+      setError(res.message);
       return;
     }
-
-    // success -> navigate to dashboard
-    navigate("/dashboard");
+    navigate("/login");
   }
 
   return (
     <div className="col-md-6 mx-auto">
-      <h2 className="fw-bold mb-3 text-center">Register</h2>
+      <h2 className="fw-bold text-center">Register</h2>
 
-      <form className="border p-4 rounded shadow-sm" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="border p-4 rounded">
         {error && <div className="alert alert-danger">{error}</div>}
 
-        <div className="mb-3">
-          <label className="form-label">Full Name</label>
-          <input
-            type="text"
-            name="name"
-            className="form-control"
-            required
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter your name"
-          />
-        </div>
+        <input className="form-control mb-2" placeholder="Name"
+          onChange={(e) => setForm({ ...form, name: e.target.value })} />
 
-        <div className="mb-3">
-          <label className="form-label">Email Address</label>
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            required
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-          />
-        </div>
+        <input className="form-control mb-2" placeholder="Email"
+          onChange={(e) => setForm({ ...form, email: e.target.value })} />
 
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            required
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-          />
-        </div>
+        <input className="form-control mb-3" type="password" placeholder="Password"
+          onChange={(e) => setForm({ ...form, password: e.target.value })} />
 
-        <div className="mb-3">
-          <label className="form-label">Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            className="form-control"
-            required
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm your password"
-          />
-        </div>
-
-        <button type="submit" className="btn btn-success w-100 mt-2">
-          Register
-        </button>
-
-        <p className="text-center mt-3">
-          Already have an account?{" "}
-          <a href="/login" className="fw-bold">
-            Login here
-          </a>
-        </p>
+        <button className="btn btn-success w-100">Register</button>
       </form>
     </div>
   );
 }
-
-export default RegisterPage;

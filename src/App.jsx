@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import HotelListPage from "./pages/HotelListPage";
 import HotelDetailsPage from "./pages/HotelDetailsPage";
 import BookingPage from "./pages/BookingPage";
+import BookingDetailsPage from "./pages/BookingDetailsPage";
 import BookingConfirmPage from "./pages/BookingConfirmPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -21,9 +22,13 @@ export default function App() {
     <div className="d-flex flex-column min-vh-100 position-relative">
 
       {/* SKY WAVE MOTION BACKGROUND */}
-      <div className="wave"></div>
-      <div className="wave"></div>
-      <div className="wave"></div>
+      {/* BACKGROUND WAVES */}
+      <div className="wave-wrapper">
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+      </div>
+
 
       {/* NAVBAR */}
       <Navbar />
@@ -36,6 +41,7 @@ export default function App() {
           <Route path="/hotels" element={<HotelListPage />} />
           <Route path="/hotel/:id" element={<HotelDetailsPage />} />
           <Route path="/booking" element={<BookingPage />} />
+          <Route path="/booking/:id" element={<BookingDetailsPage />} />
           <Route path="/confirm" element={<BookingConfirmPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

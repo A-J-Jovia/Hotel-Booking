@@ -1,72 +1,88 @@
 // src/api.js
 import axios from "axios";
 
-const FAKE_BASE = "https://my-fake-api.dev"; // placeholder, not required for local fallback
+const BASE = "http://localhost:5000/api";
 
-// axios instance (you can swap baseURL to RapidAPI endpoints if you want)
 export const api = axios.create({
-  baseURL: FAKE_BASE,
-  timeout: 8000,
+  baseURL: BASE,
+  timeout: 10000,
 });
 
-// Example functions with fallback local data
-const sampleHotels = [
-  {
-    id: 1,
-    name: "Grand Palace Hotel",
-    location: "Chennai",
-    price: 3500,
-    image: "https://images.unsplash.com/photo-1559599238-0a5cd54c2c74?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    id: 2,
-    name: "Ocean View Resort",
-    location: "Goa",
-    price: 5500,
-    image: "https://images.unsplash.com/photo-1501117716987-c8e1ecb210d5?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    id: 3,
-    name: "City Comfort Inn",
-    location: "Bangalore",
-    price: 2500,
-    image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80"
+// ================== AUTH TOKEN ==================
+export function setAuthToken(token) {
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common["Authorization"];
   }
-];
+}
 
+// ================== HOTELS ==================
 export async function fetchHotels() {
-  try {
-    // try real request (replace endpoint later)
-    const res = await api.get("/hotels");
-    if (res?.data?.length) return res.data;
-  } catch (e) {
-    // ignore, we'll fallback to sample
-  }
-  return sampleHotels;
+  const res = await api.get("/hotels");
+  return (res.data || []).map((h) => ({
+    ...h,
+    id: h._id,
+  }));
 }
 
 export async function fetchHotelById(id) {
-  try {
-    const res = await api.get(`/hotels/${id}`);
-    if (res?.data) return res.data;
-  } catch (e) {}
-  return sampleHotels.find((h) => Number(h.id) === Number(id));
+  const res = await api.get(`/hotels/${id}`);
+  const h = res.data;
+  return { ...h, id: h._id };
 }
 
-// Booking create — for demo we persist to localStorage
-export async function createBooking(booking) {
-  // booking => { userEmail, hotelId, hotel, checkin, checkout, guests, name }
-  const key = "hb_bookings";
-  const raw = localStorage.getItem(key);
-  const bookings = raw ? JSON.parse(raw) : [];
-  bookings.push({ id: Date.now(), ...booking });
-  localStorage.setItem(key, JSON.stringify(bookings));
-  return { ok: true, booking: bookings[bookings.length - 1] };
+// ================== ADMIN HOTEL APIs ==================
+export async function addHotelAPI(data) {
+  const res = await api.post("/hotels", data);
+  return res.data;
 }
 
-export async function fetchBookingsByEmail(email) {
-  const key = "hb_bookings";
-  const raw = localStorage.getItem(key);
-  const bookings = raw ? JSON.parse(raw) : [];
-  return bookings.filter((b) => b.userEmail === email);
+export async function deleteHotelAPI(id) {
+  const res = await api.delete(`/hotels/${id}`);
+  return res.data;
+}
+
+export async function updateHotelAPI(id, data) {
+  const res = await api.put(`/hotels/${id}`, data);
+  return res.data;
+}
+
+// ================== BOOKINGS ==================
+export async function createBookingAPI(payload) {
+  const res = await api.post("/bookings", payload);
+  return res.data;
+}
+
+export async function fetchUserBookingsAPI() {
+  const res = await api.get("/bookings");
+  return res.data;
+}
+
+// ================== AUTH ==================
+export async function loginAPI(body) {
+  const res = await api.post("/auth/login", body);
+  return res.data;
+}
+
+export async function registerAPI(body) {
+  const res = await api.post("/auth/register", body);
+  return res.data;
+}
+
+// ================== CANCEL BOOKING ==================
+export async function cancelBookingAPI(id) {
+  const res = await api.delete(`/bookings/${id}`);
+  return res.data;
+}
+
+// ================== REVIEWS ==================
+export async function fetchHotelReviewsAPI(hotelId) {
+  const res = await api.get(`/reviews/${hotelId}`);
+  return res.data;
+}
+
+export async function addReviewAPI(payload) {
+  const res = await api.post("/reviews", payload);
+  return res.data;
 }
