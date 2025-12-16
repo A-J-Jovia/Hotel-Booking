@@ -76,12 +76,12 @@ export async function cancelBookingAPI(id) {
 // ================== AUTH ==================
 // Backend route: /auth
 export async function loginAPI(body) {
-  const res = await api.post("/auth/login", body);
+  const res = await api.post("/api/auth/login", body);
   return res.data;
 }
 
 export async function registerAPI(body) {
-  const res = await api.post("/auth/register", body);
+  const res = await api.post("/api/auth/register", body);
   return res.data;
 }
 
