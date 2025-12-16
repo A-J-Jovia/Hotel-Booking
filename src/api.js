@@ -1,11 +1,21 @@
 // src/api.js
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api";
+// ================== BASE URL ==================
+// This will come from Vercel Environment Variables in production
+// and from .env locally
+const BASE_URL = import.meta.env.VITE_API_URL;
 
+// Safety check (helps debugging)
+if (!BASE_URL) {
+  console.error("❌ VITE_API_URL is not defined");
+}
+
+// ================== AXIOS INSTANCE ==================
 export const api = axios.create({
-  baseURL: BASE,
+  baseURL: BASE_URL, // e.g. https://hotel-booking-backend-k8ip.onrender.com
   timeout: 10000,
+  withCredentials: true,
 });
 
 // ================== AUTH TOKEN ==================
@@ -59,6 +69,11 @@ export async function fetchUserBookingsAPI() {
   return res.data;
 }
 
+export async function cancelBookingAPI(id) {
+  const res = await api.delete(`/bookings/${id}`);
+  return res.data;
+}
+
 // ================== AUTH ==================
 export async function loginAPI(body) {
   const res = await api.post("/auth/login", body);
@@ -67,12 +82,6 @@ export async function loginAPI(body) {
 
 export async function registerAPI(body) {
   const res = await api.post("/auth/register", body);
-  return res.data;
-}
-
-// ================== CANCEL BOOKING ==================
-export async function cancelBookingAPI(id) {
-  const res = await api.delete(`/bookings/${id}`);
   return res.data;
 }
 
