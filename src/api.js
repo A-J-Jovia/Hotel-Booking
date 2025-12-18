@@ -12,6 +12,7 @@ if (!BASE_URL) {
 export const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
+  withCredentials: true
 });
 
 // ================== AUTH TOKEN ==================
@@ -32,6 +33,17 @@ export async function fetchHotels() {
 export async function fetchHotelById(id) {
   const res = await api.get(`/api/hotels/${id}`);
   return { ...res.data, id: res.data._id };
+}
+
+// ================== ADMIN: HOTELS ==================
+export async function addHotelAPI(hotelData) {
+  const res = await api.post("/api/hotels", hotelData);
+  return res.data;
+}
+
+export async function deleteHotelAPI(hotelId) {
+  const res = await api.delete(`/api/hotels/${hotelId}`);
+  return res.data;
 }
 
 // ================== BOOKINGS ==================
