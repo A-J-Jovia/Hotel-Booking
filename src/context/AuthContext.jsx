@@ -18,12 +18,16 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("hb_user"))
   );
-  const [token, setToken] = useState(localStorage.getItem("hb_token"));
+  const [token, setToken] = useState(null);
 
-  // Attach token to axios on change
+  // 🔑 Attach token ONCE on app load (FIX)
   useEffect(() => {
-    setAuthToken(token);
-  }, [token]);
+    const storedToken = localStorage.getItem("hb_token");
+    if (storedToken) {
+      setAuthToken(storedToken);
+      setToken(storedToken);
+    }
+  }, []);
 
   // ---------------- LOGIN ----------------
   async function login(data) {
@@ -34,6 +38,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem("hb_token", res.token);
       setUser(res.user);
       setToken(res.token);
+      setAuthToken(res.token); // ✅ attach immediately
     }
 
     return res;
@@ -50,6 +55,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("hb_token");
     setUser(null);
     setToken(null);
+    setAuthToken(null); // ✅ remove token
   }
 
   // ---------------- ADD BOOKING ----------------
@@ -65,11 +71,11 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ---------------- GET BOOKINGS (✅ FIXED) ----------------
+  // ---------------- GET BOOKINGS ----------------
   async function getBookings() {
     try {
       const res = await fetchUserBookingsAPI();
-      return res; // ✅ array directly
+      return res;
     } catch (err) {
       return [];
     }
