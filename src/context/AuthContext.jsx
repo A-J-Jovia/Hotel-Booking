@@ -65,11 +65,11 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // ---------------- GET BOOKINGS ----------------
+  // ---------------- GET BOOKINGS (✅ FIXED) ----------------
   async function getBookings() {
     try {
       const res = await fetchUserBookingsAPI();
-      return res.bookings || [];
+      return res; // ✅ array directly
     } catch (err) {
       return [];
     }
